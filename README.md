@@ -4,9 +4,10 @@ App Flutter para inversionistas principiantes: explica en lenguaje simple qué s
 
 ## Funcionalidades (MVP)
 
-- Dashboard con líder del día, top 3 fuertes y top 3 débiles
-- Semáforo sectorial (verde / amarillo / rojo) de las 16 áreas
-- Detalle por sector: rendimiento día/semana/mes/año, explicación y riesgo
+- Pantalla inicial con 16 áreas y variación diaria de ejemplo cuando hay ETF de referencia
+- Detalle por área: explicación, rendimientos de ejemplo, riesgo orientativo e instrumentos ordenados por cambio diario simulado
+- Materias primas explica oro, plata y cobre sin asignar un porcentaje general al grupo
+- Los dividendos se explican en el detalle educativo, no como un sector independiente
 - Sin registro
 
 ## Arquitectura (MVC)
@@ -20,7 +21,7 @@ lib/
   main.dart
 ```
 
-Los datos son mock. Para usar la API real, implementar `MarketService` y cambiarlo en `main.dart`.
+Los porcentajes y las explicaciones de movimientos son ficticios: no representan el mercado real ni son recomendaciones de inversión. Los instrumentos muestran una selección ilustrativa, no los de mejor rendimiento real. Materias primas usa ETFs de referencia, incluido CPER, que utiliza futuros de cobre. Para usar la API real, implementar `MarketService`, cambiarlo en `main.dart` y actualizar los avisos de datos de ejemplo en las vistas. Antes de ofrecer rankings reales, definir su universo, período, fuente y fecha de actualización.
 
 ## Uso
 

@@ -22,7 +22,17 @@ class RadarMercadoApp extends StatelessWidget {
       title: 'Radar de Mercado',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF003366)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF087F8C)),
+        scaffoldBackgroundColor: const Color(0xFFF6FAF8),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFFF6FAF8),
+          foregroundColor: Color(0xFF173B42),
+          titleTextStyle: TextStyle(
+            color: Color(0xFF173B42),
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
         useMaterial3: true,
       ),
       home: DashboardPage(controller: controller),

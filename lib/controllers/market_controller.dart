@@ -19,7 +19,8 @@ class MarketController extends ChangeNotifier {
   List<SectorPerformance> get sectors => _sectors;
 
   List<SectorPerformance> get _ranked =>
-      [..._sectors]..sort((a, b) => b.day.compareTo(a.day));
+      _sectors.where((sector) => sector.day != null).toList()
+        ..sort((a, b) => b.day!.compareTo(a.day!));
 
   SectorPerformance? get leader => _ranked.isEmpty ? null : _ranked.first;
   List<SectorPerformance> get topStrong => _ranked.take(3).toList();

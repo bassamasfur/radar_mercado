@@ -4,7 +4,6 @@ import '../controllers/market_controller.dart';
 import '../models/sector_performance.dart';
 import 'sector_detail_page.dart';
 import 'widgets/sector_tile.dart';
-import 'widgets/ui_helpers.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key, required this.controller});
@@ -28,26 +27,29 @@ class DashboardPage extends StatelessWidget {
             IconButton(
               tooltip: 'Actualizar',
               icon: const Icon(Icons.refresh),
-              onPressed: controller.load,
+              onPressed: controller.status == LoadStatus.loading
+                  ? null
+                  : controller.load,
             ),
           ],
         ),
         body: switch (controller.status) {
-          LoadStatus.idle || LoadStatus.loading =>
-            const Center(child: CircularProgressIndicator()),
+          LoadStatus.idle || LoadStatus.loading => const Center(
+            child: CircularProgressIndicator(),
+          ),
           LoadStatus.error => Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(controller.error ?? 'Error'),
-                  const SizedBox(height: 12),
-                  FilledButton(
-                    onPressed: controller.load,
-                    child: const Text('Reintentar'),
-                  ),
-                ],
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(controller.error ?? 'Error'),
+                const SizedBox(height: 12),
+                FilledButton(
+                  onPressed: controller.load,
+                  child: const Text('Reintentar'),
+                ),
+              ],
             ),
+          ),
           LoadStatus.success => _content(context),
         },
       ),
@@ -55,81 +57,108 @@ class DashboardPage extends StatelessWidget {
   }
 
   Widget _content(BuildContext context) {
-    final leader = controller.leader;
+    final theme = Theme.of(context);
     return RefreshIndicator(
       onRefresh: controller.load,
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          if (leader != null)
-            _LeaderCard(item: leader, onTap: () => _open(context, leader)),
-          _section(context, '💪 Top 3 sectores fuertes', controller.topStrong),
-          _section(context, '⚠️ Top 3 sectores débiles', controller.topWeak),
-          _section(context, '🚦 Radar completo', [
-            ...controller.byLight(TrafficLight.green),
-            ...controller.byLight(TrafficLight.yellow),
-            ...controller.byLight(TrafficLight.red),
-          ]),
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 680),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Explora el mercado',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: const Color(0xFF173B42),
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Descubre cómo se mueve cada área. Toca una para aprender más.',
+                  ),
+                  const SizedBox(height: 16),
+                  const _DemoNotice(),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Áreas del mercado',
+                          style: theme.textTheme.titleMedium,
+                        ),
+                      ),
+                      Text(
+                        'Cambio del día',
+                        style: theme.textTheme.labelMedium,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Cambio del ETF de referencia: + sube · − baja, '
+                    'respecto al cierre anterior.',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 12),
+                  if (controller.sectors.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Text('No hay áreas disponibles por ahora.'),
+                    )
+                  else
+                    Column(
+                      children: [
+                        for (final item in controller.sectors)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: SectorTile(
+                              item: item,
+                              onTap: () => _open(context, item),
+                            ),
+                          ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
-
-  Widget _section(
-      BuildContext context, String title, List<SectorPerformance> items) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 20, bottom: 4),
-          child: Text(title, style: Theme.of(context).textTheme.titleMedium),
-        ),
-        Card(
-          child: Column(
-            children: [
-              for (final i in items)
-                SectorTile(item: i, onTap: () => _open(context, i)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 }
 
-class _LeaderCard extends StatelessWidget {
-  const _LeaderCard({required this.item, required this.onTap});
-
-  final SectorPerformance item;
-  final VoidCallback onTap;
+class _DemoNotice extends StatelessWidget {
+  const _DemoNotice();
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      color: theme.colorScheme.primaryContainer,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('🏆 Líder del día'),
-              const SizedBox(height: 8),
-              Text(item.sector.name, style: theme.textTheme.headlineSmall),
-              Text(
-                formatPct(item.day),
-                style: theme.textTheme.titleLarge
-                    ?.copyWith(color: pctColor(item.day)),
-              ),
-              if (item.driver != null) ...[
-                const SizedBox(height: 8),
-                Text(item.driver!),
-              ],
-            ],
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE5F5F7),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFB8E5E8)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline_rounded, color: Color(0xFF087481)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Datos de ejemplo: no representan el mercado real.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: const Color(0xFF21535B)),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

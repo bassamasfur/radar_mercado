@@ -3,7 +3,6 @@ enum SectorCategory {
   defensivo('Defensivo'),
   economia('Economía'),
   patrimonio('Patrimonio'),
-  estrategia('Estrategia'),
   alternativos('Alternativos'),
   geografia('Geografía');
 
@@ -34,7 +33,7 @@ class Sector {
 
   final String id;
   final String name;
-  final String etf;
+  final String? etf;
   final SectorCategory category;
   final RiskLevel risk;
   final String description;
