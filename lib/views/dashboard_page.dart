@@ -58,6 +58,7 @@ class DashboardPage extends StatelessWidget {
 
   Widget _content(BuildContext context) {
     final theme = Theme.of(context);
+    final visibleSectors = controller.visibleSectors;
     return RefreshIndicator(
       onRefresh: controller.load,
       child: ListView(
@@ -105,7 +106,7 @@ class DashboardPage extends StatelessWidget {
                     style: theme.textTheme.bodySmall,
                   ),
                   const SizedBox(height: 12),
-                  if (controller.sectors.isEmpty)
+                  if (visibleSectors.isEmpty)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 24),
                       child: Text('No hay áreas disponibles por ahora.'),
@@ -113,7 +114,7 @@ class DashboardPage extends StatelessWidget {
                   else
                     Column(
                       children: [
-                        for (final item in controller.sectors)
+                        for (final item in visibleSectors)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 10),
                             child: SectorTile(

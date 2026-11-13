@@ -2,13 +2,16 @@ import 'package:flutter/foundation.dart';
 
 import '../models/sector_performance.dart';
 import '../services/market_service.dart';
+import 'visible_sectors.dart';
 
 enum LoadStatus { idle, loading, success, error }
 
 class MarketController extends ChangeNotifier {
-  MarketController(this._service);
+  MarketController(this._service, {Set<String> visibleIds = visibleSectorIds})
+    : _visibleIds = Set.unmodifiable(visibleIds);
 
   final MarketService _service;
+  final Set<String> _visibleIds;
 
   LoadStatus _status = LoadStatus.idle;
   List<SectorPerformance> _sectors = const [];
@@ -17,6 +20,9 @@ class MarketController extends ChangeNotifier {
   LoadStatus get status => _status;
   String? get error => _error;
   List<SectorPerformance> get sectors => _sectors;
+  List<SectorPerformance> get visibleSectors => _sectors
+      .where((sector) => _visibleIds.contains(sector.sector.id))
+      .toList();
 
   List<SectorPerformance> get _ranked =>
       _sectors.where((sector) => sector.day != null).toList()

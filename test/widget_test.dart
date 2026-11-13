@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:radar_mercado/controllers/market_controller.dart';
+import 'package:radar_mercado/controllers/visible_sectors.dart';
 import 'package:radar_mercado/main.dart';
 import 'package:radar_mercado/models/sector_performance.dart';
 import 'package:radar_mercado/services/mock_market_service.dart';
@@ -51,7 +52,7 @@ void main() {
     expect(c.status, LoadStatus.error);
   });
 
-  testWidgets('muestra las 16 áreas una vez con sus porcentajes', (
+  testWidgets('muestra las 12 áreas del MVP una vez con sus porcentajes', (
     tester,
   ) async {
     final c = MarketController(MockMarketService(latency: Duration.zero));
@@ -62,9 +63,31 @@ void main() {
       find.text('Datos de ejemplo: no representan el mercado real.'),
       findsOneWidget,
     );
-    expect(find.byType(SectorTile), findsNWidgets(16));
+    expect(find.byType(SectorTile), findsNWidgets(12));
     expect(find.text('Dividendos'), findsNothing);
-    for (final item in c.sectors) {
+    expect(c.visibleSectors.map((s) => s.sector.name), [
+      'Tecnología',
+      'Comunicación',
+      'Consumo Discrecional',
+      'Salud',
+      'Consumo Básico',
+      'Servicios públicos',
+      'Finanzas',
+      'Industrial',
+      'Energía',
+      'Defensa y aeroespacial',
+      'Materias primas',
+      'Bitcoin',
+    ]);
+    for (final name in [
+      'Bienes raíces',
+      'Materiales',
+      'Internacional',
+      'Emergentes',
+    ]) {
+      expect(find.text(name), findsNothing);
+    }
+    for (final item in c.visibleSectors) {
       final tile = find.byWidgetPredicate(
         (widget) =>
             widget is SectorTile && widget.item.sector.id == item.sector.id,
@@ -111,19 +134,45 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Bitcoin'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Bitcoin'));
+    await tester.pumpAndSettle();
+    expect(find.text('¿Qué es Bitcoin?'), findsOneWidget);
+    final dailyRow = find.widgetWithText(ListTile, 'Día');
+    expect(
+      find.descendant(of: dailyRow, matching: find.text('+1.90%')),
+      findsOneWidget,
+    );
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byType(SectorTile), findsNWidgets(12));
+  });
+
+  testWidgets('permite habilitar y abrir un área reservada', (tester) async {
+    final c = MarketController(
+      MockMarketService(latency: Duration.zero),
+      visibleIds: {...visibleSectorIds, 'em'},
+    );
+    await tester.runAsync(c.load);
+    await tester.pumpWidget(RadarMercadoApp(controller: c));
+    expect(find.byType(SectorTile), findsNWidgets(13));
     await tester.ensureVisible(find.text('Emergentes'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Emergentes'));
     await tester.pumpAndSettle();
     expect(find.text('¿Qué es Emergentes?'), findsOneWidget);
-    final dailyRow = find.widgetWithText(ListTile, 'Día');
-    expect(
-      find.descendant(of: dailyRow, matching: find.text('-0.15%')),
-      findsOneWidget,
+  });
+
+  testWidgets('informa si no hay áreas visibles', (tester) async {
+    final c = MarketController(
+      MockMarketService(latency: Duration.zero),
+      visibleIds: {},
     );
-    await tester.pageBack();
-    await tester.pumpAndSettle();
-    expect(find.byType(SectorTile), findsNWidgets(16));
+    await tester.runAsync(c.load);
+    await tester.pumpWidget(RadarMercadoApp(controller: c));
+    expect(find.text('No hay áreas disponibles por ahora.'), findsOneWidget);
+    expect(find.byType(SectorTile), findsNothing);
   });
 
   testWidgets('materias primas abre detalle directo sin porcentaje general', (
